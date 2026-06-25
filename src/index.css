@@ -1,0 +1,274 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Nunito", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+    /* primary mint teal */
+    --primary: #19c8b9;
+    --primary-hover: #3dd4c6;
+    --primary-active: #11a89b;
+    --primary-bg: #e6f9f6;
+
+    /* warm-brown text */
+    --text: #794f27; /* headings / sidebar */
+    --text-body: #725d42; /* in-component body */
+    --text-secondary: #9f927d;
+    --text-muted: #8a7b66;
+    --text-disabled: #c4b89e;
+
+    /* parchment background */
+    --bg: #f8f8f0;
+    --bg-content: rgb(247, 243, 223); /* card / modal / table inside */
+    --bg-disabled: #f0ece2;
+
+    /* borders */
+    --border: #c4b89e;
+    --border-hover: #a89878;
+    --border-strong: #9f927d;
+
+    /* status */
+    --success: #6fba2c;
+    --success-active: #5a9e1e;
+    --warning: #f5c31c;
+    --warning-active: #dba90e;
+    --error: #e05a5a;
+    --error-active: #c94444;
+
+    /* game-special */
+    --focus-yellow: #ffcc00; /* Input/Switch/Checkbox focus — NOT blue */
+    --focus-yellow-d: #e0b800;
+    --focus-yellow-radio: #f5c31c; /* Radio uses warmer yellow */
+
+    /* 3D shadow taupe */
+    --shadow-btn: #bdaea0;
+    --shadow-input: #d4c9b4;
+    --shadow-switch: #5a9e1e;
+
+    /* radii */
+    --r-sm: 12px;
+    --r-base: 18px;
+    --r-lg: 24px;
+    --r-pill: 50px;
+
+    /* motion */
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --d-fast: 0.15s;
+    --d-base: 0.25s;
+    --d-slow: 0.35s;
+
+    --phone-bg: #f8f4e8;
+    --phone-border: #edeae0;
+    --phone-notch: #cbc7bb;
+}
+
+/* Base Body Vibe */
+body {
+  background-color: var(--bg);
+  color: var(--text-body);
+  font-family: "Nunito", "Noto Sans SC", -apple-system, "PingFang SC", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin: 0;
+  padding: 0;
+}
+
+/* Unselectable text styling for all elements (except inputs) */
+*, *::before, *::after {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Keep form input values and typing selectability active */
+input, textarea, select {
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+}
+
+/* Native time inputs keep the picker button while suppressing text selection. */
+input[data-native-time="true"],
+input[data-native-time="true"]::-webkit-datetime-edit,
+input[data-native-time="true"]::-webkit-datetime-edit-fields-wrapper,
+input[data-native-time="true"]::-webkit-datetime-edit-text,
+input[data-native-time="true"]::-webkit-datetime-edit-hour-field,
+input[data-native-time="true"]::-webkit-datetime-edit-minute-field,
+input[data-native-time="true"]::-webkit-datetime-edit-ampm-field {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Prevent any internal/external scrollbars from showing globally */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE 10+ */
+}
+*::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
+}
+
+html, body, #root {
+  overflow: hidden !important;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Custom Cursor */
+.animal-cursor, .animal-cursor * {
+  /* cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23794f27' stroke='%23fff' stroke-width='2'%3E%3Cpath d='M4.5 2.23l14.85 9.42-5.75.94 3.9 6.75-2.6 1.5-3.9-6.75-4.14 3.7c-.4.36-.8 0-.4-1.2L4.5 2.23c0 0-.25-.66.01-.6.25.07.4.4.4.4z'/%3E%3C/svg%3E") 4 0, auto !important; */
+  cursor: url("/public/rainbow.png") 4 0, auto !important;
+}
+
+/* Loading animations */
+@keyframes btn-loading {
+  to {
+    background-position: -28.28px 0;
+  }
+}
+
+.animate-btn-loading {
+  background: #0ec4b6;
+  background-image: repeating-linear-gradient(-45deg, #0ec4b6 0 10px, #01b0a7 10px 20px);
+  background-size: 28.28px 28.28px;
+  border: 4px solid #4de2da;
+  color: #fff;
+  box-shadow: none;
+  animation: btn-loading 1s linear infinite;
+}
+
+/* HUD clock colon blink */
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Leaf wiggle animation */
+@keyframes leafWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.15); }
+}
+
+.animate-leaf-wiggle {
+  animation: leafWiggle 1.5s ease-in-out infinite;
+}
+
+/* Nook Phone Grasswave */
+@keyframes grasswave {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-grasswave {
+  background: radial-gradient(circle at 20% 30%, #eefbf7 0%, transparent 40%),
+              radial-gradient(circle at 80% 70%, #fefcf0 0%, transparent 50%),
+              #f8f4e8;
+  background-size: 150% 150%;
+  animation: grasswave 12s ease-in-out infinite;
+}
+
+/* Cute leaf background details for dashboard background */
+.bg-leaf-pattern {
+  background-image: radial-gradient(circle, rgba(25, 200, 185, 0.04) 1.5px, transparent 1.5px),
+                    radial-gradient(circle, rgba(25, 200, 185, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px, 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+/* Polka dot configurations for cards */
+.pattern-default {
+  background: var(--bg-content);
+  border: 2px solid var(--border);
+  color: var(--text-body);
+}
+
+.pattern-app-pink {
+  background: radial-gradient(circle, rgba(248, 166, 178, 0.18) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(255, 200, 210, 0.12) 1px, transparent 1px) 7px 7px/14px 14px,
+              #fde4e8;
+  border: 2.5px solid #f8a6b2;
+  color: #7a3542;
+}
+
+.pattern-app-teal {
+  background: radial-gradient(circle, rgba(130, 213, 187, 0.22) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(160, 230, 210, 0.14) 1px, transparent 1px) 7px 7px/14px 14px,
+              #e9fbf6;
+  border: 2.5px solid #82d5bb;
+  color: #276251;
+}
+
+.pattern-app-yellow {
+  background: radial-gradient(circle, rgba(247, 205, 103, 0.22) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(253, 230, 160, 0.14) 1px, transparent 1px) 7px 7px/14px 14px,
+              #fff9e3;
+  border: 2.5px solid #f7cd67;
+  color: #725d42;
+}
+
+.pattern-app-green {
+  background: radial-gradient(circle, rgba(138, 198, 138, 0.22) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(170, 220, 170, 0.14) 1px, transparent 1px) 7px 7px/14px 14px,
+              #edf8ed;
+  border: 2.5px solid #8ac68a;
+  color: #2c592c;
+}
+
+.pattern-purple {
+  background: radial-gradient(circle, rgba(183, 125, 238, 0.18) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(210, 165, 250, 0.12) 1px, transparent 1px) 7px 7px/14px 14px,
+              #faf0fe;
+  border: 2.5px solid #b77dee;
+  color: #532c7e;
+}
+
+.pattern-app-blue {
+  background: radial-gradient(circle, rgba(136, 157, 240, 0.18) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(175, 190, 255, 0.12) 1px, transparent 1px) 7px 7px/14px 14px,
+              #f0f4ff;
+  border: 2.5px solid #889df0;
+  color: #2c3a7a;
+}
+
+.pattern-app-orange {
+  background: radial-gradient(circle, rgba(229, 146, 102, 0.18) 1.5px, transparent 1.5px) 0 0/28px 28px,
+              radial-gradient(circle, rgba(245, 180, 150, 0.12) 1px, transparent 1px) 7px 7px/14px 14px,
+              #fef2ea;
+  border: 2.5px solid #e59266;
+  color: #823c14;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-radius: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border: 3px solid var(--bg);
+  border-radius: 12px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
