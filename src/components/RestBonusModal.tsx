@@ -1,7 +1,11 @@
 import React from "react";
 import { Modal, Button } from "./AnimalUI";
-import { Quote } from "../types";
 import { LocaleData } from "../locales";
+
+interface Quote {
+  text: string;
+  author: string;
+}
 
 interface RestBonusModalProps {
   isResting: boolean;

@@ -1,6 +1,6 @@
 import type {TimerMachineSnapshot} from './timerMachine';
 
-export const TIMER_MACHINE_STORAGE_KEY = 'timerMachineSnapshot';
+const TIMER_MACHINE_STORAGE_KEY = 'timerMachineSnapshot';
 
 const SNAPSHOT_VERSION = 1;
 const TIMER_MACHINE_MODES: ReadonlySet<TimerMachineSnapshot['mode']> = new Set([
@@ -29,12 +29,6 @@ export function loadTimerMachineSnapshot(): TimerMachineSnapshot | null {
 export function saveTimerMachineSnapshot(snapshot: TimerMachineSnapshot) {
   try {
     localStorage.setItem(TIMER_MACHINE_STORAGE_KEY, JSON.stringify(snapshot));
-  } catch {}
-}
-
-export function clearTimerMachineSnapshot() {
-  try {
-    localStorage.removeItem(TIMER_MACHINE_STORAGE_KEY);
   } catch {}
 }
 

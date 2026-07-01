@@ -32,7 +32,7 @@ export default function App() {
         mobileDockRef={controller.mobileDockRef}
         mobileLayoutRootRef={controller.mobileLayoutRootRef}
         mobileTab={controller.mobileTab}
-        muteSound={controller.muteSound}
+        isClockOutMusicPaused={controller.isClockOutMusicPaused}
         presets={controller.presets}
         restDuration={controller.restDuration}
         restInterval={controller.restInterval}
@@ -52,7 +52,7 @@ export default function App() {
         formatNextBreakTimer={controller.formatNextBreakTimer}
         onSimulateRest={controller.handleSimulateRest}
         onSubmitClockOut={controller.handleSubmitClockOut}
-        onToggleMuteSound={controller.handleToggleMuteSound}
+        onToggleClockOutPlayback={controller.handleToggleClockOutMusicPreference}
       />
 
       <RestBonusModal
@@ -71,6 +71,7 @@ export default function App() {
         onClose={controller.handleCloseClockOut}
         isMusicPaused={controller.isClockOutMusicPaused}
         onTogglePlayback={controller.handleToggleClockOutPlayback}
+        isMobile={controller.isMobile}
       />
 
       <footer

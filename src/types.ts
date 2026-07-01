@@ -16,8 +16,3 @@ export interface Preset {
   start: string;
   end: string;
 }
-
-export interface Quote {
-  text: string;
-  author: string;
-}

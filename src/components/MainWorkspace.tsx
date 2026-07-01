@@ -23,7 +23,7 @@ interface MainWorkspaceProps {
   mobileDockRef: React.RefObject<HTMLDivElement | null>;
   mobileLayoutRootRef: React.RefObject<HTMLDivElement | null>;
   mobileTab: MobileTab;
-  muteSound: boolean;
+  isClockOutMusicPaused: boolean;
   presets: Preset[];
   restDuration: number;
   restInterval: number;
@@ -43,7 +43,7 @@ interface MainWorkspaceProps {
   formatNextBreakTimer: () => string;
   onSimulateRest: () => void;
   onSubmitClockOut: () => void;
-  onToggleMuteSound: () => void;
+  onToggleClockOutPlayback: () => void;
 }
 
 export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
@@ -60,7 +60,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
   mobileDockRef,
   mobileLayoutRootRef,
   mobileTab,
-  muteSound,
+  isClockOutMusicPaused,
   presets,
   restDuration,
   restInterval,
@@ -80,7 +80,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
   formatNextBreakTimer,
   onSimulateRest,
   onSubmitClockOut,
-  onToggleMuteSound,
+  onToggleClockOutPlayback,
 }) => {
   return (
     <main className="flex-1 min-h-0 w-full max-w-7xl mx-auto p-4 md:p-6 overflow-hidden z-10 select-none">
@@ -100,8 +100,8 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
                 timerCalc={timerCalc}
                 activeUnit={activeUnit}
                 setActiveUnit={setActiveUnit}
-                muteSound={muteSound}
-                setMuteSound={onToggleMuteSound}
+                isClockOutMusicPaused={isClockOutMusicPaused}
+                onToggleClockOutPlayback={onToggleClockOutPlayback}
                 onSubmitClockOut={onSubmitClockOut}
                 helperSubtext={helperSubtext}
                 t={t}
@@ -163,8 +163,8 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
                     timerCalc={timerCalc}
                     activeUnit={activeUnit}
                     setActiveUnit={setActiveUnit}
-                    muteSound={muteSound}
-                    setMuteSound={onToggleMuteSound}
+                    isClockOutMusicPaused={isClockOutMusicPaused}
+                    onToggleClockOutPlayback={onToggleClockOutPlayback}
                     onSubmitClockOut={onSubmitClockOut}
                     helperSubtext={helperSubtext}
                     t={t}

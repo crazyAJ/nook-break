@@ -15,14 +15,6 @@ class ClockOutMusicService {
   private warmupPromise: Promise<void> | null = null;
   private fadeJobId = 0;
 
-  public getStatus() {
-    return this.status;
-  }
-
-  public getResolvedUrl() {
-    return this.resolvedUrl;
-  }
-
   public setMuted(muted: boolean) {
     this.muted = muted;
     if (muted) {

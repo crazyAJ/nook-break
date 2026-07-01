@@ -6,7 +6,7 @@ import { Check, Smile } from "lucide-react";
  * ============================================================================
  * DESIGN TOKENS & TYPOGRAPHY INFO
  * ============================================================================
- * Primary Font: Nunito, Noto Sans SC
+ * Primary Font: Segoe UI / PingFang SC / Microsoft YaHei system stack
  * Primary Colors: Mint Teal (#19c8b9), Warm Brown text (#725d42, #794f27)
  * Warm background: rgb(247, 243, 223) / #f8f8f0
  * ============================================================================

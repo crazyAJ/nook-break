@@ -68,7 +68,7 @@ export const locales: Record<"zh" | "en" | "ja" | "ko" | "tc", LocaleData> = {
 
     beforeWorkTitle: "🌞 上班倒计时",
     workHoursTitle: "距离快乐下班还有",
-    afterWorkTitle: "🎉 已经顺利下班！",
+    afterWorkTitle: "已经顺利下班！",
     afterWorkCelebrate: "下班啦！🎉",
     afterWorkSub: "辛苦啦！今晚去找傅达研究化石，或者去海滩钓河豚吧！",
     combinationTab: "⏱️ 时分秒",
@@ -124,7 +124,7 @@ export const locales: Record<"zh" | "en" | "ja" | "ko" | "tc", LocaleData> = {
 
     beforeWorkTitle: "🌞 上班倒計時",
     workHoursTitle: "距離快樂下班還有",
-    afterWorkTitle: "🎉 已經順利下班！",
+    afterWorkTitle: "已經順利下班！",
     afterWorkCelebrate: "下班啦！🎉",
     afterWorkSub: "辛苦啦！今晚去找傅達研究化石，或者去海灘釣河豚吧！",
     combinationTab: "⏱️ 時分秒",
@@ -180,7 +180,7 @@ export const locales: Record<"zh" | "en" | "ja" | "ko" | "tc", LocaleData> = {
 
     beforeWorkTitle: "🌞 Countdown to shift start",
     workHoursTitle: "Countdown to Clock-out!",
-    afterWorkTitle: "🎉 Successfully Off Work!",
+    afterWorkTitle: "Successfully Off Work!",
     afterWorkCelebrate: "Off duty! 🎉",
     afterWorkSub: "Great job today! Go investigate fossils with Blathers, or catch some puffers on the beach!",
     combinationTab: "⏱️ H/M/S",
@@ -236,7 +236,7 @@ export const locales: Record<"zh" | "en" | "ja" | "ko" | "tc", LocaleData> = {
 
     beforeWorkTitle: "🌞 始業カウントダウン",
     workHoursTitle: "退勤まであと",
-    afterWorkTitle: "🎉 無事に退勤しました！",
+    afterWorkTitle: "無事に退勤しました！",
     afterWorkCelebrate: "退勤ですよ！🎉",
     afterWorkSub: "お疲れ様でした！今夜はフータと化石研究をするか、ビーチでフグ釣りに行きましょう！",
     combinationTab: "⏱️ 時分秒",
@@ -292,7 +292,7 @@ export const locales: Record<"zh" | "en" | "ja" | "ko" | "tc", LocaleData> = {
 
     beforeWorkTitle: "🌞 출근 카운트다운",
     workHoursTitle: "퇴근까지 남은 시간",
-    afterWorkTitle: "🎉 무사히 퇴근했습니다!",
+    afterWorkTitle: "무사히 퇴근했습니다!",
     afterWorkCelebrate: "퇴근입니다! 🎉",
     afterWorkSub: "오늘도 수고하셨어요! 오늘 밤에는 부박사와 화석 연구를 하거나 해변에서 복어 낚시를 해보세요!",
     combinationTab: "⏱️ 시분초",

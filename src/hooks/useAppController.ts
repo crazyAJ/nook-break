@@ -15,6 +15,7 @@ import { locales, ERGONOMIC_QUOTES } from "../locales";
 import type { AppLanguage, Preset, TimerCalc } from "../types";
 
 type MobileTab = "dashboard" | "nookphone";
+const CLOCKOUT_MUSIC_PAUSED_STORAGE_KEY = "clockOutMusicPaused";
 
 export function useAppController() {
   const [lang, setLang] = useState<AppLanguage>(() => {
@@ -75,7 +76,9 @@ export function useAppController() {
     return saved === "true";
   });
   const [showClockOutModal, setShowClockOutModal] = useState(false);
-  const [isClockOutMusicPaused, setIsClockOutMusicPaused] = useState(false);
+  const [isClockOutMusicPaused, setIsClockOutMusicPaused] = useState(() => {
+    return localStorage.getItem(CLOCKOUT_MUSIC_PAUSED_STORAGE_KEY) === "true";
+  });
   const [now, setNow] = useState(() => new Date());
 
   const appHeaderRef = useRef<HTMLElement | null>(null);
@@ -224,16 +227,27 @@ export function useAppController() {
   }, [timerMachineSnapshot]);
 
   useEffect(() => {
+    if (clockTickRef.current !== null) {
+      clearInterval(clockTickRef.current);
+      clockTickRef.current = null;
+    }
+
+    if (showClockOutModal) {
+      return;
+    }
+
+    setNow(new Date());
     clockTickRef.current = window.setInterval(() => {
       setNow(new Date());
     }, 1000);
 
     return () => {
-      if (clockTickRef.current) {
+      if (clockTickRef.current !== null) {
         clearInterval(clockTickRef.current);
+        clockTickRef.current = null;
       }
     };
-  }, []);
+  }, [showClockOutModal]);
 
   useEffect(() => {
     const currentMode = timerMachineSnapshot?.mode ?? null;
@@ -241,8 +255,9 @@ export function useAppController() {
 
     if (currentMode === "after_work" && previousMode !== "after_work") {
       setShowClockOutModal(true);
-      setIsClockOutMusicPaused(false);
-      void clockOutMusic.playLoop();
+      if (!isClockOutMusicPaused) {
+        void clockOutMusic.playLoop();
+      }
     }
 
     if (currentMode === "resting" && previousMode === "working") {
@@ -263,7 +278,7 @@ export function useAppController() {
     }
 
     previousTimerMachineModeRef.current = currentMode;
-  }, [lang, muteSound, timerMachineSnapshot?.mode]);
+  }, [isClockOutMusicPaused, lang, muteSound, timerMachineSnapshot?.mode]);
 
   const presets: Preset[] = [
     { name: lang === "zh" ? "标准作息 965" : lang === "tc" ? "標準作息 965" : lang === "ja" ? "標準 965" : lang === "ko" ? "표준 965" : "Standard 965", start: "09:00", end: "18:00" },
@@ -351,6 +366,14 @@ export function useAppController() {
   };
 
   const handleSubmitClockOut = () => {
+    if (timerMachineSnapshot?.mode === "after_work") {
+      setShowClockOutModal(true);
+      if (!isClockOutMusicPaused) {
+        void clockOutMusic.playLoop();
+      }
+      return;
+    }
+
     const currentHours = String(now.getHours()).padStart(2, "0");
     const currentMinutes = String(now.getMinutes()).padStart(2, "0");
     setEndTime(`${currentHours}:${currentMinutes}`);
@@ -358,19 +381,43 @@ export function useAppController() {
 
   const handleCloseClockOut = () => {
     setShowClockOutModal(false);
-    setIsClockOutMusicPaused(false);
     clockOutMusic.stop();
   };
 
+  const persistClockOutMusicPaused = (paused: boolean) => {
+    setIsClockOutMusicPaused(paused);
+    localStorage.setItem(CLOCKOUT_MUSIC_PAUSED_STORAGE_KEY, String(paused));
+  };
+
   const handleToggleClockOutPlayback = () => {
-    if (isClockOutMusicPaused) {
-      setIsClockOutMusicPaused(false);
-      void clockOutMusic.playLoop();
+    const nextPaused = !isClockOutMusicPaused;
+    persistClockOutMusicPaused(nextPaused);
+
+    if (nextPaused) {
+      clockOutMusic.pause();
       return;
     }
 
-    setIsClockOutMusicPaused(true);
-    clockOutMusic.pause();
+    void clockOutMusic.playLoop();
+  };
+
+  const handleToggleClockOutMusicPreference = () => {
+    const nextPaused = !isClockOutMusicPaused;
+    persistClockOutMusicPaused(nextPaused);
+
+    if (!showClockOutModal) {
+      if (nextPaused) {
+        clockOutMusic.pause();
+      }
+      return;
+    }
+
+    if (nextPaused) {
+      clockOutMusic.pause();
+      return;
+    }
+
+    void clockOutMusic.playLoop();
   };
 
   const handleToggleMuteSound = () => {
@@ -379,7 +426,7 @@ export function useAppController() {
     localStorage.setItem("muteSound", String(newMute));
     clockOutMusic.setMuted(newMute);
 
-    if (!newMute && showClockOutModal) {
+    if (!newMute && showClockOutModal && !isClockOutMusicPaused) {
       void clockOutMusic.playLoop();
     }
   };
@@ -396,6 +443,7 @@ export function useAppController() {
     handleSimulateRest,
     handleSkipRest,
     handleSubmitClockOut,
+    handleToggleClockOutMusicPreference,
     handleToggleClockOutPlayback,
     handleToggleMuteSound,
     helperSubtext,

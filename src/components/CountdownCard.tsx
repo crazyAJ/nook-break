@@ -9,8 +9,8 @@ interface CountdownCardProps {
   timerCalc: TimerCalc;
   activeUnit: string;
   setActiveUnit: (unit: string) => void;
-  muteSound: boolean;
-  setMuteSound: (val: boolean) => void;
+  isClockOutMusicPaused: boolean;
+  onToggleClockOutPlayback: () => void;
   onSubmitClockOut?: () => void;
   helperSubtext: string;
   t: LocaleData;
@@ -22,8 +22,8 @@ export const CountdownCard: React.FC<CountdownCardProps> = ({
   timerCalc,
   activeUnit,
   setActiveUnit,
-  muteSound,
-  setMuteSound,
+  isClockOutMusicPaused,
+  onToggleClockOutPlayback,
   onSubmitClockOut,
   helperSubtext,
   t,
@@ -64,11 +64,10 @@ export const CountdownCard: React.FC<CountdownCardProps> = ({
     <Card pattern="app-pink" className={`relative p-4 sm:p-5 md:p-6 flex flex-col justify-between shadow-md shrink-0 ${className}`}>
       <div className="absolute top-[12px] right-[12px] sm:top-[14px] sm:right-[14px] flex items-center gap-[8px] z-10">
         <button
-          onClick={() => setMuteSound(!muteSound)}
+          onClick={onToggleClockOutPlayback}
           className="w-[32px] h-[32px] sm:w-[34px] sm:h-[34px] rounded-full bg-white/65 border-2 border-[#f8a6b2] flex items-center justify-center text-[#7a3542] hover:bg-[#fff9e3] transition-all cursor-pointer shadow-sm"
-          title={muteSound ? "Enable Sound / 开启音效" : "Mute Sound / 静音"}
         >
-          {muteSound ? <VolumeX className="w-4 h-4 sm:w-[18px] sm:h-[18px]" /> : <Volume2 className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />}
+          {isClockOutMusicPaused ? <VolumeX className="w-4 h-4 sm:w-[18px] sm:h-[18px]" /> : <Volume2 className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />}
         </button>
       </div>
 

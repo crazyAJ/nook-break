@@ -1,6 +1,0 @@
-{
-  "name": "下班倒计时与健康休息助手",
-  "description": "一个优雅的下班倒计时、当前时间、自定义工作时段与定时休息/番茄钟提醒助手。",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
