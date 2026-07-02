@@ -1,7 +1,7 @@
 import React from "react";
 import { Check, Languages } from "lucide-react";
 import { HUDClock } from "./AnimalUI";
-import type { LocaleData } from "../locales";
+import { LANGUAGE_LABELS, type LocaleData } from "../locales";
 import type { AppLanguage } from "../types";
 
 interface AppHeaderProps {
@@ -12,14 +12,6 @@ interface AppHeaderProps {
   setShowLanguagePicker: (show: boolean) => void;
   t: LocaleData;
 }
-
-const LANGUAGE_LABELS: Record<AppLanguage, string> = {
-  zh: "🇨🇳 简体中文",
-  tc: "🇭🇰 繁體中文",
-  en: "🇺🇸 English",
-  ja: "🇯🇵 日本語",
-  ko: "🇰🇷 한국어",
-};
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
   headerRef,
@@ -33,7 +25,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <header
       ref={headerRef}
       data-layout="app-header"
-      className="px-4 sm:px-6 py-2 sm:py-3.5 bg-[#fdfaf2]/90 backdrop-blur-[6px] border-b-4 border-[#e9e2cf] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-4 shrink-0 z-25 shadow-[0_4px_12px_rgba(114,93,66,0.06)] select-none relative"
+      className="glass-blur glass-blur-md px-4 sm:px-6 py-2 sm:py-3.5 bg-[#fdfaf2]/90 border-b-4 border-[#e9e2cf] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-4 shrink-0 z-25 shadow-[0_4px_12px_rgba(114,93,66,0.06)] select-none relative"
     >
       <div className="absolute top-0 left-12 w-8 h-2 bg-[#19c8b9]/10 rounded-b-full hidden lg:block" />
       <div className="absolute top-0 left-24 w-6 h-1.5 bg-[#f7cd67]/15 rounded-b-full hidden lg:block" />
@@ -51,7 +43,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               {t.appName}
             </h1>
             <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-[#19c8b9] bg-[#19c8b9]/12 px-1.5 py-0.5 rounded-full border border-[#19c8b9]/25 shrink-0">
-              NOOK INC.
+              {t.brandBadgeLabel}
             </span>
           </div>
           <div className="flex items-center gap-1 mt-0.5 sm:mt-1.5 min-w-0">
@@ -68,7 +60,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={() => setShowLanguagePicker(!showLanguagePicker)}
             className="px-[12px] h-[34px] rounded-full bg-white border-2 border-[#bdaea0] text-[#725d42] font-black text-[11px] sm:text-[12px] flex items-center gap-1 hover:bg-[#fff9e3] transition-all cursor-pointer shadow-sm"
-            title="Switch Language / 切换语言"
+            title={t.languageSwitchTitle}
           >
             <Languages className="w-3.5 h-3.5" />
             <span>{lang.toUpperCase()}</span>
@@ -101,7 +93,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
 
         <div data-layout="mobile-header-clock" className="scale-75 sm:scale-90 origin-right shrink-0">
-          <HUDClock />
+          <HUDClock lang={lang} />
         </div>
       </div>
     </header>

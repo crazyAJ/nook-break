@@ -1,5 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clockOutMusic } from "../lib/clockOutMusic";
+import {
+  observeElementRect,
+  scheduleIdleCallback,
+  supportsResizeObserver,
+} from "../lib/browserCompat";
 import { registerServiceWorker } from "../lib/registerServiceWorker";
 import {
   createInitialTimerMachineSnapshot,
@@ -11,7 +16,14 @@ import {
   loadTimerMachineSnapshot,
   saveTimerMachineSnapshot,
 } from "../lib/timerMachineStorage";
-import { locales, ERGONOMIC_QUOTES } from "../locales";
+import {
+  buildPresets,
+  formatLocalizedDuration,
+  formatNextBreakTimerLabel,
+  getErgonomicQuotes,
+  getHelperSubtext,
+  locales,
+} from "../locales";
 import type { AppLanguage, Preset, TimerCalc } from "../types";
 
 type MobileTab = "dashboard" | "nookphone";
@@ -110,13 +122,7 @@ export function useAppController() {
       void clockOutMusic.warmup();
     };
 
-    if ("requestIdleCallback" in window) {
-      const idleId = window.requestIdleCallback(runWarmup);
-      return () => window.cancelIdleCallback(idleId);
-    }
-
-    const timeoutId = globalThis.setTimeout(runWarmup, 1200);
-    return () => globalThis.clearTimeout(timeoutId);
+    return scheduleIdleCallback(runWarmup);
   }, []);
 
   useEffect(() => {
@@ -165,20 +171,15 @@ export function useAppController() {
       setMobileContentEdgeGap(measuredEdgeGap);
     };
 
-    measureMobileContentSpacing();
-    window.addEventListener("resize", measureMobileContentSpacing);
-
-    let resizeObserver: ResizeObserver | null = null;
-    if ("ResizeObserver" in window) {
-      resizeObserver = new ResizeObserver(measureMobileContentSpacing);
-      resizeObserver.observe(headerElement);
-      resizeObserver.observe(dockElement);
-      resizeObserver.observe(layoutRootElement);
-    }
+    const observedElements = supportsResizeObserver()
+      ? [headerElement, dockElement, layoutRootElement]
+      : [layoutRootElement];
+    const cleanups = observedElements.map((element) =>
+      observeElementRect(element, measureMobileContentSpacing),
+    );
 
     return () => {
-      window.removeEventListener("resize", measureMobileContentSpacing);
-      resizeObserver?.disconnect();
+      cleanups.forEach((cleanup) => cleanup());
     };
   }, [isMobile]);
 
@@ -261,7 +262,7 @@ export function useAppController() {
     }
 
     if (currentMode === "resting" && previousMode === "working") {
-      const quotesCount = ERGONOMIC_QUOTES(lang).length;
+      const quotesCount = getErgonomicQuotes(lang).length;
       setTipIndex((old) => (old + 1) % quotesCount);
       playAlertChime(muteSound);
     }
@@ -280,34 +281,14 @@ export function useAppController() {
     previousTimerMachineModeRef.current = currentMode;
   }, [isClockOutMusicPaused, lang, muteSound, timerMachineSnapshot?.mode]);
 
-  const presets: Preset[] = [
-    { name: lang === "zh" ? "标准作息 965" : lang === "tc" ? "標準作息 965" : lang === "ja" ? "標準 965" : lang === "ko" ? "표준 965" : "Standard 965", start: "09:00", end: "18:00" },
-    { name: lang === "zh" ? "国企养生 855" : lang === "tc" ? "國企養生 855" : lang === "ja" ? "健康養生 855" : lang === "ko" ? "웰빙 855" : "Relaxed 855", start: "08:00", end: "17:00" },
-    { name: lang === "zh" ? "奋斗极客 996" : lang === "tc" ? "奮鬥極客 996" : lang === "ja" ? "不屈ハード 996" : lang === "ko" ? "하드코어 996" : "Hardcore 996", start: "09:00", end: "21:00" },
-    { name: lang === "zh" ? "半天班 84" : lang === "tc" ? "半天班 84" : lang === "ja" ? "半日 84" : lang === "ko" ? "반일 84" : "Half-Day 84", start: "08:30", end: "12:30" },
-  ];
+  const presets: Preset[] = buildPresets(lang);
 
   const timerCalc = getOffWorkCalculation({ startTime, endTime, now, lang });
 
   const helperSubtext = getHelperSubtext(lang, timerCalc.progressPercentage, timerCalc.statusText);
 
   const formatNextBreakTimer = () => {
-    const h = Math.floor(nextBreakSeconds / 3600);
-    const m = Math.floor((nextBreakSeconds % 3600) / 60);
-    const s = nextBreakSeconds % 60;
-    if (lang === "zh") {
-      return `${h ? h + "小时" : ""} ${m}分钟 ${s}秒`;
-    }
-    if (lang === "tc") {
-      return `${h ? h + "小時" : ""} ${m}分鐘 ${s}秒`;
-    }
-    if (lang === "ja") {
-      return `${h ? h + "時間" : ""} ${m}分 ${s}秒`;
-    }
-    if (lang === "ko") {
-      return `${h ? h + "시간" : ""} ${m}분 ${s}초`;
-    }
-    return `${h ? h + "h" : ""} ${m}m ${s}s`;
+    return formatNextBreakTimerLabel(lang, nextBreakSeconds);
   };
 
   const loadPreset = (preset: Preset) => {
@@ -434,7 +415,7 @@ export function useAppController() {
   return {
     activeUnit,
     appHeaderRef,
-    currentQuote: ERGONOMIC_QUOTES(lang)[tipIndex],
+    currentQuote: getErgonomicQuotes(lang)[tipIndex],
     endTime,
     formatNextBreakTimer,
     handleCloseClockOut,
@@ -520,15 +501,12 @@ function getOffWorkCalculation({
   const progressPercent =
     totalSecsDay > 0 ? Math.min(100, Math.max(0, (elapsedSecsDay / totalSecsDay) * 100)) : 0;
 
-  const formattedCombination = lang === "zh"
-    ? `${hoursPart}小时 ${minutesPart}分钟 ${secondsPart}秒`
-    : lang === "tc"
-      ? `${hoursPart}小時 ${minutesPart}分鐘 ${secondsPart}秒`
-      : lang === "ja"
-        ? `${hoursPart}時間 ${minutesPart}分 ${secondsPart}秒`
-        : lang === "ko"
-          ? `${hoursPart}시간 ${minutesPart}분 ${secondsPart}초`
-          : `${hoursPart}h ${minutesPart}m ${secondsPart}s`;
+  const formattedCombination = formatLocalizedDuration(
+    lang,
+    hoursPart,
+    minutesPart,
+    secondsPart,
+  );
 
   return {
     statusText,
@@ -540,71 +518,6 @@ function getOffWorkCalculation({
     progressPercentage: progressPercent.toFixed(1),
     isDuring: currentSecs >= startSecs && currentSecs < endSecs,
   };
-}
-
-function getHelperSubtext(
-  lang: AppLanguage,
-  progressPercentage: string,
-  statusText: string,
-) {
-  if (statusText === "beforeWork") {
-    return lang === "zh"
-      ? "还没有开始正式工作哟。放轻松，享受静谧清晨吧！"
-      : lang === "tc"
-        ? "還沒有開始正式工作喲。放輕鬆，享受靜謐清晨吧！"
-        : lang === "ja"
-          ? "まだ勤務時間が始まっていませんね。リラックスして静かな朝を楽しみましょう！"
-          : lang === "ko"
-            ? "아직 공식 근무 시간이 시작되지 않았어요. 편안하게 조용한 아침을 즐겨보세요!"
-            : "Shift hasn't officially started. Sit back, relax, and enjoy the quiet morning!";
-  }
-
-  if (statusText === "afterWork") {
-    return lang === "zh"
-      ? "下班探针任务圆满达成！快背上行囊散步去吧！"
-      : lang === "tc"
-        ? "下班探針任務圓滿達成！快背上行囊散步去吧！"
-        : lang === "ja"
-          ? "退勤時間がやってきました！急いで荷物をまとめてお散歩に行きましょう！"
-          : lang === "ko"
-            ? "즐거운 퇴근 시간입니다오늘 하루 최고였구리 어서 퇴근해서 산책을 가볼까요!"
-            : "Off-work objective secured! Travel safe and have a delightful evening!";
-  }
-
-  const percentNum = parseFloat(progressPercentage);
-  if (percentNum < 30) {
-    return lang === "zh"
-      ? "刚开启元气满满的一天！狸村今日也是充满动力 and 生机！"
-      : lang === "tc"
-        ? "剛開啟元氣滿滿的一天！狸村今日也是充滿動力 and 生機！"
-        : lang === "ja"
-          ? "一日が元気よく始まりました！今日もたぬき村はパワーいっぱいです！"
-          : lang === "ko"
-            ? "가뿐하게 아침을 시작했구리! 오늘도 건강하고 생기 넘치는 섬 생활을 시작해봐요!"
-            : "Plunge into an energetic shift! The village is thriving with a vivid breeze today!";
-  }
-
-  if (percentNum < 70) {
-    return lang === "zh"
-      ? "不知不觉工作过半！让我们的心情就像岛上的晴天一样灿烂。"
-      : lang === "tc"
-        ? "不知不覺工作過半！讓我們的心情就像島上的晴天一樣燦爛。"
-        : lang === "ja"
-          ? "いつの間にか勤務時間が半分に！島の晴れ渡る空のように元気に行きましょう！"
-          : lang === "ko"
-            ? "어느덧 근무 시간의 절반이 훌쩍 지나갔어요! 쾌청한 하늘처럼 행복한 하루 보내세요!"
-            : "Midshift completed! May your mood be as radiant as the island's clear sky.";
-  }
-
-  return lang === "zh"
-    ? "太棒啦！夕阳已染红椰树梢，今天的下班钟声就要敲响啦！"
-    : lang === "tc"
-      ? "太棒啦！夕陽已染紅椰樹梢，今天的下班鐘聲就要敲響啦！"
-      : lang === "ja"
-        ? "素晴らしい！夕日がココナッツの木陰を赤く染め、終業ベルが鳴り響きます！"
-        : lang === "ko"
-          ? "근무 종료가 임박했구리 야자수 사이로 지는 멋진 노을을 감상하며 하루를 마무리해요!"
-          : "Marvelous! Sunset has gilded the coconut palms, clock-out chimes are imminent!";
 }
 
 function getWorkdayKey(now: Date) {

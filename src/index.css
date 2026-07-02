@@ -103,6 +103,40 @@ input[data-native-time="true"]::-webkit-datetime-edit-ampm-field {
   -webkit-user-select: none !important;
 }
 
+input[data-native-time="true"]::-webkit-calendar-picker-indicator {
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+}
+
+/* Shared glass fallback: keep semi-transparent backgrounds by default, enable blur only when supported. */
+.glass-blur {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.glass-blur-xs {
+  --glass-blur-amount: 2px;
+}
+
+.glass-blur-sm {
+  --glass-blur-amount: 4px;
+}
+
+.glass-blur-md {
+  --glass-blur-amount: 6px;
+}
+
+.glass-blur-lg {
+  --glass-blur-amount: 8px;
+}
+
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass-blur {
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount, 6px));
+    backdrop-filter: blur(var(--glass-blur-amount, 6px));
+  }
+}
+
 /* Prevent any internal/external scrollbars from showing globally */
 * {
   scrollbar-width: none !important; /* Firefox */

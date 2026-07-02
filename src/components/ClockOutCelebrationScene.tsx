@@ -5,6 +5,7 @@ import {
   getShuffledClockOutAnimalKeys,
   preloadClockOutAnimalSprites,
 } from "../lib/clockOutAnimalSprites";
+import { getEventPoint, observeElementRect } from "../lib/browserCompat";
 
 interface ClockOutCelebrationSceneProps {
   isMobile: boolean;
@@ -68,7 +69,8 @@ interface ProjectionResult {
 
 interface DragState {
   actorId: number;
-  pointerId: number;
+  pointerId: number | null;
+  source: "pointer" | "mouse" | "touch";
   offsetX: number;
   offsetY: number;
 }
@@ -139,6 +141,7 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
     let disposed = false;
     let lastTime = performance.now();
     let dragState: DragState | null = null;
+    let skipNextSwapTick = false;
 
     const getActorById = (actorId: number) =>
       actors.find((actor) => actor.id === actorId) ?? null;
@@ -190,11 +193,10 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
       });
 
       queueActorIds.splice(insertAfterIndex + 1, 0, actorId);
-      if (queueActorIds[0] === actorId && nextSwapAt <= motionTimeMs) {
-        nextSwapAt = motionTimeMs + SWAP_INTERVAL_MS;
-      }
       if (nextSwapAt === Number.POSITIVE_INFINITY) {
         nextSwapAt = motionTimeMs + SWAP_INTERVAL_MS;
+      } else if (nextSwapAt <= motionTimeMs) {
+        skipNextSwapTick = true;
       }
     };
 
@@ -291,6 +293,64 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
       actor.manualY = clampedPosition.y;
     };
 
+    const beginActorInteraction = (
+      actor: ActorState,
+      point: {clientX: number; clientY: number},
+      source: DragState["source"],
+      pointerId: number | null,
+    ) => {
+      if (actor.mode === "queue") {
+        enterInteractiveActor(actor);
+      }
+
+      const interactiveActor = getActorById(actor.id);
+      if (!interactiveActor || interactiveActor.mode !== "interactive") {
+        return false;
+      }
+
+      dragState = {
+        actorId: interactiveActor.id,
+        pointerId,
+        source,
+        offsetX: point.clientX - interactiveActor.manualX,
+        offsetY: point.clientY - interactiveActor.manualY,
+      };
+      return true;
+    };
+
+    const updateDraggedActor = (point: {clientX: number; clientY: number}) => {
+      if (!dragState) {
+        return false;
+      }
+
+      const actor = getActorById(dragState.actorId);
+      if (!actor || actor.mode !== "interactive") {
+        return false;
+      }
+
+      updateActorManualPosition(
+        actor,
+        point.clientX - dragState.offsetX,
+        point.clientY - dragState.offsetY,
+      );
+      return true;
+    };
+
+    const finishActorInteraction = (now: number) => {
+      if (!dragState) {
+        return false;
+      }
+
+      const actor = getActorById(dragState.actorId);
+      dragState = null;
+      if (!actor || actor.mode !== "interactive") {
+        return false;
+      }
+
+      releaseInteractiveActor(actor, now);
+      return true;
+    };
+
     const spawnActor = () => {
       const key = sequence[nextSequenceIndex];
       const size = sizePattern[nextActorId % sizePattern.length];
@@ -349,7 +409,7 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
       nextSwapAt = motionNow + SWAP_INTERVAL_MS;
     };
 
-    const attachPointerHandlers = () => {
+    const attachInteractionHandlers = () => {
       const cleanups: Array<() => void> = [];
 
       slotWrapperRefs.current.forEach((wrapperElement, slotIndex) => {
@@ -357,8 +417,8 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
           return;
         }
 
-        const handlePointerEnter = (event: PointerEvent) => {
-          if (isMobile || event.pointerType !== "mouse" || event.buttons !== 0) {
+        const handleMouseEnter = (event: MouseEvent) => {
+          if (isMobile || event.buttons !== 0) {
             return;
           }
           const actor = getActorBySlot(slotIndex);
@@ -368,8 +428,8 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
           enterInteractiveActor(actor);
         };
 
-        const handlePointerLeave = (event: PointerEvent) => {
-          if (isMobile || event.pointerType !== "mouse") {
+        const handleMouseLeave = () => {
+          if (isMobile) {
             return;
           }
           const actor = getActorBySlot(slotIndex);
@@ -389,93 +449,158 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
           rejoinActorImmediately(actor, projection);
         };
 
-        const handlePointerDown = (event: PointerEvent) => {
+        const handleMouseDown = (event: MouseEvent) => {
           const actor = getActorBySlot(slotIndex);
-          if (!actor) {
+          const point = getEventPoint(event);
+          if (!actor || point === null) {
             return;
           }
 
-          wrapperElement.setPointerCapture(event.pointerId);
-
-          if (event.pointerType === "mouse") {
-            if (actor.mode !== "interactive") {
-              return;
-            }
-            dragState = {
-              actorId: actor.id,
-              pointerId: event.pointerId,
-              offsetX: event.clientX - actor.manualX,
-              offsetY: event.clientY - actor.manualY,
-            };
+          if (beginActorInteraction(actor, point, "mouse", null)) {
             event.preventDefault();
-            return;
           }
-
-          if (actor.mode === "queue") {
-            enterInteractiveActor(actor);
-          }
-
-          const interactiveActor = getActorById(actor.id);
-          if (!interactiveActor || interactiveActor.mode !== "interactive") {
-            return;
-          }
-
-          dragState = {
-            actorId: interactiveActor.id,
-            pointerId: event.pointerId,
-            offsetX: event.clientX - interactiveActor.manualX,
-            offsetY: event.clientY - interactiveActor.manualY,
-          };
-          event.preventDefault();
         };
 
-        const handlePointerMove = (event: PointerEvent) => {
-          if (!dragState || dragState.pointerId !== event.pointerId) {
+        const handleTouchStart = (event: TouchEvent) => {
+          const actor = getActorBySlot(slotIndex);
+          const point = getEventPoint(event);
+          if (!actor || point === null) {
             return;
           }
 
-          const actor = getActorById(dragState.actorId);
-          if (!actor || actor.mode !== "interactive") {
-            return;
+          if (beginActorInteraction(actor, point, "touch", null)) {
+            event.preventDefault();
           }
-
-          updateActorManualPosition(
-            actor,
-            event.clientX - dragState.offsetX,
-            event.clientY - dragState.offsetY,
-          );
-          event.preventDefault();
         };
 
-        const handlePointerUpOrCancel = (event: PointerEvent) => {
-          if (!dragState || dragState.pointerId !== event.pointerId) {
+        const handlePointerDown = (event: PointerEvent) => {
+          if (event.pointerType === "mouse" || event.pointerType === "touch") {
             return;
           }
 
-          const actor = getActorById(dragState.actorId);
-          dragState = null;
-          if (!actor || actor.mode !== "interactive") {
+          const actor = getActorBySlot(slotIndex);
+          const point = getEventPoint(event);
+          if (!actor || point === null) {
             return;
           }
 
-          releaseInteractiveActor(actor, performance.now());
+          if (beginActorInteraction(actor, point, "pointer", event.pointerId)) {
+            try {
+              wrapperElement.setPointerCapture(event.pointerId);
+            } catch {
+              // Safari 对 capture 支持不稳定，失败时继续走 window 级事件托底。
+            }
+            event.preventDefault();
+          }
         };
 
-        wrapperElement.addEventListener("pointerenter", handlePointerEnter);
-        wrapperElement.addEventListener("pointerleave", handlePointerLeave);
+        wrapperElement.addEventListener("mouseenter", handleMouseEnter);
+        wrapperElement.addEventListener("mouseleave", handleMouseLeave);
+        wrapperElement.addEventListener("mousedown", handleMouseDown);
+        wrapperElement.addEventListener("touchstart", handleTouchStart, {passive: false});
         wrapperElement.addEventListener("pointerdown", handlePointerDown);
-        wrapperElement.addEventListener("pointermove", handlePointerMove);
-        wrapperElement.addEventListener("pointerup", handlePointerUpOrCancel);
-        wrapperElement.addEventListener("pointercancel", handlePointerUpOrCancel);
 
         cleanups.push(() => {
-          wrapperElement.removeEventListener("pointerenter", handlePointerEnter);
-          wrapperElement.removeEventListener("pointerleave", handlePointerLeave);
+          wrapperElement.removeEventListener("mouseenter", handleMouseEnter);
+          wrapperElement.removeEventListener("mouseleave", handleMouseLeave);
+          wrapperElement.removeEventListener("mousedown", handleMouseDown);
+          wrapperElement.removeEventListener("touchstart", handleTouchStart);
           wrapperElement.removeEventListener("pointerdown", handlePointerDown);
-          wrapperElement.removeEventListener("pointermove", handlePointerMove);
-          wrapperElement.removeEventListener("pointerup", handlePointerUpOrCancel);
-          wrapperElement.removeEventListener("pointercancel", handlePointerUpOrCancel);
         });
+      });
+
+      const handleMouseMove = (event: MouseEvent) => {
+        if (!dragState || dragState.source !== "mouse") {
+          return;
+        }
+
+        const point = getEventPoint(event);
+        if (point === null) {
+          return;
+        }
+
+        if (updateDraggedActor(point)) {
+          event.preventDefault();
+        }
+      };
+
+      const handleMouseUp = () => {
+        if (!dragState || dragState.source !== "mouse") {
+          return;
+        }
+        finishActorInteraction(performance.now());
+      };
+
+      const handleTouchMove = (event: TouchEvent) => {
+        if (!dragState || dragState.source !== "touch") {
+          return;
+        }
+
+        const point = getEventPoint(event);
+        if (point === null) {
+          return;
+        }
+
+        if (updateDraggedActor(point)) {
+          event.preventDefault();
+        }
+      };
+
+      const handleTouchEndOrCancel = () => {
+        if (!dragState || dragState.source !== "touch") {
+          return;
+        }
+        finishActorInteraction(performance.now());
+      };
+
+      const handlePointerMove = (event: PointerEvent) => {
+        if (
+          !dragState ||
+          dragState.source !== "pointer" ||
+          dragState.pointerId !== event.pointerId
+        ) {
+          return;
+        }
+
+        const point = getEventPoint(event);
+        if (point === null) {
+          return;
+        }
+
+        if (updateDraggedActor(point)) {
+          event.preventDefault();
+        }
+      };
+
+      const handlePointerEndOrCancel = (event: PointerEvent) => {
+        if (
+          !dragState ||
+          dragState.source !== "pointer" ||
+          dragState.pointerId !== event.pointerId
+        ) {
+          return;
+        }
+        finishActorInteraction(performance.now());
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove, {passive: false});
+      window.addEventListener("touchend", handleTouchEndOrCancel);
+      window.addEventListener("touchcancel", handleTouchEndOrCancel);
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerEndOrCancel);
+      window.addEventListener("pointercancel", handlePointerEndOrCancel);
+
+      cleanups.push(() => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+        window.removeEventListener("touchmove", handleTouchMove);
+        window.removeEventListener("touchend", handleTouchEndOrCancel);
+        window.removeEventListener("touchcancel", handleTouchEndOrCancel);
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerEndOrCancel);
+        window.removeEventListener("pointercancel", handlePointerEndOrCancel);
       });
 
       return () => {
@@ -563,7 +688,9 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
         wrapperElement.style.opacity = "1";
         wrapperElement.style.visibility = "visible";
         wrapperElement.style.zIndex =
-          actor.mode === "queue"
+          dragState?.actorId === actor.id
+            ? `${visibleCount * 4 + actor.id + 1}`
+            : actor.mode === "queue"
             ? `${actor.slotIndex + 1}`
             : `${visibleCount * 2 + actor.id + 1}`;
         wrapperElement.style.transform =
@@ -720,17 +847,20 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
       }
 
       if (queueActorIds.length > 0 && motionTimeMs >= nextSwapAt) {
-        startQueueSwap(motionTimeMs);
+        if (skipNextSwapTick) {
+          skipNextSwapTick = false;
+          nextSwapAt = motionTimeMs + SWAP_INTERVAL_MS;
+        } else {
+          startQueueSwap(motionTimeMs);
+        }
       }
 
       updateActorStyles(now, motionTimeMs);
       frameId = window.requestAnimationFrame(animate);
     };
 
-    updateBounds();
-    const resizeObserver = new ResizeObserver(updateBounds);
-    resizeObserver.observe(containerElement);
-    const detachPointerHandlers = attachPointerHandlers();
+    const stopObservingBounds = observeElementRect(containerElement, updateBounds);
+    const detachPointerHandlers = attachInteractionHandlers();
 
     slotWrapperRefs.current.forEach((wrapperElement) => {
       if (!wrapperElement) {
@@ -746,7 +876,7 @@ export const ClockOutCelebrationScene: React.FC<ClockOutCelebrationSceneProps> =
     return () => {
       disposed = true;
       window.cancelAnimationFrame(frameId);
-      resizeObserver.disconnect();
+      stopObservingBounds();
       detachPointerHandlers();
       slotWrapperRefs.current = [];
       slotFlipperRefs.current = [];

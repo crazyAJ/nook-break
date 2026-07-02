@@ -24,7 +24,6 @@ export default function App() {
         helperSubtext={controller.helperSubtext}
         isCustomRhythm={controller.isCustomRhythm}
         isMobile={controller.isMobile}
-        lang={controller.lang}
         loadPreset={controller.loadPreset}
         miles={controller.miles}
         mobileContentEdgeGap={controller.mobileContentEdgeGap}
@@ -72,6 +71,7 @@ export default function App() {
         isMusicPaused={controller.isClockOutMusicPaused}
         onTogglePlayback={controller.handleToggleClockOutPlayback}
         isMobile={controller.isMobile}
+        t={controller.t}
       />
 
       <footer

@@ -1,6 +1,11 @@
 import React from "react";
 import { Modal, Button } from "./AnimalUI";
-import { LocaleData } from "../locales";
+import {
+  type LocaleData,
+  formatResidentQuoteHeading,
+  formatRestCountdownLabel,
+} from "../locales";
+import type { AppLanguage } from "../types";
 
 interface Quote {
   text: string;
@@ -15,7 +20,7 @@ interface RestBonusModalProps {
   onSkipRest: () => void;
   onFinishRest: () => void;
   t: LocaleData;
-  lang: "zh" | "tc" | "en" | "ja" | "ko";
+  lang: AppLanguage;
 }
 
 export const RestBonusModal: React.FC<RestBonusModalProps> = ({
@@ -39,7 +44,7 @@ export const RestBonusModal: React.FC<RestBonusModalProps> = ({
           <div className="p-[10px] bg-[#fff9e3] border-2 border-[#f7cd67] rounded-[16px] text-center font-bold shadow-sm">
             <span className="text-[#725d42] text-[13px] block animate-pulse">{t.suggestedRestTime}</span>
             <span className="text-[24px] font-mono text-[#794f27] tracking-[1px] leading-tight block">
-            {Math.floor(restTimeLeft / 60)}{(lang === "zh" || lang === "tc") ? "分" : "m"} {restTimeLeft % 60}{(lang === "zh" || lang === "tc") ? "秒" : "s"}
+              {formatRestCountdownLabel(lang, restTimeLeft)}
             </span>
           </div>
 
@@ -82,7 +87,7 @@ export const RestBonusModal: React.FC<RestBonusModalProps> = ({
 
         <div className="bg-[#fff9e3] p-[14px] rounded-[18px] border-2 border-[#f7cd67]/50 max-w-[340px] text-[13px] sm:text-[14px] leading-[1.6] shadow-sm">
           <p className="font-extrabold text-[#794f27] mb-[4px]">
-            {lang === "zh" ? `📢 岛民【${currentQuote.author}】嘱咐：` : lang === "tc" ? `📢 島民【${currentQuote.author}】囑咐：` : lang === "ja" ? `📢 島民【${currentQuote.author}】からのお願い：` : lang === "ko" ? `📢 섬 주민【${currentQuote.author}】의 조언: ` : `📢 Resident [ ${currentQuote.author} ] says:`}
+            {formatResidentQuoteHeading(lang, currentQuote.author)}
           </p>
           <p className="font-medium text-[#725d42] italic">
             &ldquo;{currentQuote.text}&rdquo;

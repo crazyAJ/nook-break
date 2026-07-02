@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { observeElementRect } from "../lib/browserCompat";
 
 interface ClockOutFireworksLayerProps {
   isMobile: boolean;
@@ -330,17 +331,15 @@ export const ClockOutFireworksLayer: React.FC<ClockOutFireworksLayerProps> = ({
       animationFrameId = window.requestAnimationFrame(tick);
     };
 
-    updateCanvasBounds();
     handleVisibilityChange();
     queueNextLaunch(0, randomBetween(160, 320));
-    const resizeObserver = new ResizeObserver(updateCanvasBounds);
-    resizeObserver.observe(hostElement);
+    const stopObservingBounds = observeElementRect(hostElement, updateCanvasBounds);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     animationFrameId = window.requestAnimationFrame(tick);
 
     return () => {
       window.cancelAnimationFrame(animationFrameId);
-      resizeObserver.disconnect();
+      stopObservingBounds();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isMobile]);

@@ -5,7 +5,7 @@ import { CountdownCard } from "./CountdownCard";
 import { WorkRhythmPresets } from "./WorkRhythmPresets";
 import { HealthPhonePanel } from "./HealthPhonePanel";
 import type { LocaleData } from "../locales";
-import type { AppLanguage, Preset, TimerCalc } from "../types";
+import type { Preset, TimerCalc } from "../types";
 
 type MobileTab = "dashboard" | "nookphone";
 
@@ -15,7 +15,6 @@ interface MainWorkspaceProps {
   helperSubtext: string;
   isCustomRhythm: boolean;
   isMobile: boolean;
-  lang: AppLanguage;
   loadPreset: (preset: Preset) => void;
   miles: number;
   mobileContentEdgeGap: number;
@@ -52,7 +51,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
   helperSubtext,
   isCustomRhythm,
   isMobile,
-  lang,
   loadPreset,
   miles,
   mobileContentEdgeGap,
@@ -105,7 +103,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
                 onSubmitClockOut={onSubmitClockOut}
                 helperSubtext={helperSubtext}
                 t={t}
-                lang={lang}
                 className="h-[364px]"
               />
 
@@ -124,7 +121,12 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
             </div>
 
             <div className="col-span-6 h-full flex flex-col items-center justify-start pt-3 px-3 pb-1.5 min-h-0 overflow-hidden">
-              <Phone title={t.appName} className="h-[632px] max-h-[632px]">
+              <Phone
+                title={t.appName}
+                versionLabel={t.phoneVersionLabel}
+                networkLabel={t.phoneNetworkLabel}
+                className="h-[632px] max-h-[632px]"
+              >
                 <HealthPhonePanel
                   miles={miles}
                   restReminderActive={restReminderActive}
@@ -168,7 +170,6 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
                     onSubmitClockOut={onSubmitClockOut}
                     helperSubtext={helperSubtext}
                     t={t}
-                    lang={lang}
                   />
 
                   <WorkRhythmPresets
@@ -186,7 +187,12 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
 
             {mobileTab === "nookphone" && (
               <div data-layout="mobile-shell" className="h-full animate-scale-up">
-                <Phone title={t.appName} className="h-full max-h-full">
+                <Phone
+                  title={t.appName}
+                  versionLabel={t.phoneVersionLabel}
+                  networkLabel={t.phoneNetworkLabel}
+                  className="h-full max-h-full"
+                >
                   <HealthPhonePanel
                     miles={miles}
                     restReminderActive={restReminderActive}
@@ -209,7 +215,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
 
           <div
             ref={mobileDockRef}
-            className="fixed bottom-0 left-0 right-0 h-[64px] pb-[safe-area-inset-bottom] bg-[#fcfaf2]/95 backdrop-blur-[6px] border-t-2 border-[#e6dec9] flex items-center justify-around px-6 z-20 shadow-[0_-4px_16px_rgba(114,93,66,0.08)] select-none"
+            className="glass-blur glass-blur-md fixed bottom-0 left-0 right-0 h-[64px] pb-[safe-area-inset-bottom] bg-[#fcfaf2]/95 border-t-2 border-[#e6dec9] flex items-center justify-around px-6 z-20 shadow-[0_-4px_16px_rgba(114,93,66,0.08)] select-none"
           >
             <button
               onClick={() => setMobileTab("dashboard")}
@@ -221,13 +227,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
             >
               <Compass className="w-[18px] h-[18px]" />
               <span className="text-[10px] uppercase tracking-wider font-extrabold mt-0.5">
-                {lang === "zh" || lang === "tc"
-                  ? lang === "tc" ? "主頁" : "主页"
-                  : lang === "ja"
-                    ? "メイン"
-                    : lang === "ko"
-                      ? "계측판"
-                      : "Home"}
+                {t.mobileDashboardTab}
               </span>
             </button>
 
@@ -241,13 +241,7 @@ export const MainWorkspace: React.FC<MainWorkspaceProps> = ({
             >
               <Smartphone className="w-[18px] h-[18px]" />
               <span className="text-[10px] uppercase tracking-wider font-extrabold mt-0.5">
-                {lang === "zh" || lang === "tc"
-                  ? "健康"
-                  : lang === "ja"
-                    ? "スマホ"
-                    : lang === "ko"
-                      ? "너굴폰"
-                      : "Health"}
+                {t.mobilePhoneTab}
               </span>
             </button>
           </div>

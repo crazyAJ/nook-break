@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Check, Smile } from "lucide-react";
+import { formatHudMonthDay, getHudWeekday } from "../locales";
+import type { AppLanguage } from "../types";
 
 /**
  * ============================================================================
@@ -150,9 +152,10 @@ export const Card: React.FC<CardProps> = ({
 interface TimeProps {
   id?: string;
   className?: string;
+  lang: AppLanguage;
 }
 
-export const HUDClock: React.FC<TimeProps> = ({ id, className = "" }) => {
+export const HUDClock: React.FC<TimeProps> = ({ id, className = "", lang }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -161,17 +164,6 @@ export const HUDClock: React.FC<TimeProps> = ({ id, className = "" }) => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const formatMonthDay = (date: Date) => {
-    const m = date.getMonth() + 1;
-    const d = date.getDate();
-    return `${m}月${d}日`;
-  };
-
-  const getWeekDay = (date: Date) => {
-    const days = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-    return days[date.getDay()];
-  };
 
   const padZero = (num: number) => num.toString().padStart(2, "0");
 
@@ -187,10 +179,10 @@ export const HUDClock: React.FC<TimeProps> = ({ id, className = "" }) => {
       {/* Date HUD element */}
       <div className="flex flex-col border-r-3 border-[#9f927d]/35 pr-[16px] max-[379px]:pr-[8px] sm:pr-[24px]">
         <div className="text-[#6fba2c] font-[900] text-[12px] max-[379px]:text-[10px] sm:text-[14px] tracking-[1.5px] uppercase">
-          {getWeekDay(time)}
+          {getHudWeekday(lang, time)}
         </div>
         <div className="text-[#8b7355] font-[800] text-[18px] max-[379px]:text-[14px] sm:text-[22px] whitespace-nowrap">
-          {formatMonthDay(time)}
+          {formatHudMonthDay(lang, time)}
         </div>
       </div>
 
@@ -447,14 +439,23 @@ export const Input: React.FC<InputProps> = ({
   };
 
   const openNativeTimePicker = (input: HTMLInputElement) => {
-    if (!isNativeTimeInput || typeof input.showPicker !== "function") {
+    if (!isNativeTimeInput) {
       return;
     }
 
+    if (typeof input.showPicker === "function") {
+      try {
+        input.showPicker();
+        return;
+      } catch {
+        // Ignore browsers that block programmatic picker access and fall back to focus().
+      }
+    }
+
     try {
-      input.showPicker();
+      input.focus({ preventScroll: true });
     } catch {
-      // Ignore browsers that block programmatic picker access.
+      input.focus();
     }
   };
 
@@ -552,9 +553,17 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  confirmText?: string;
 }
 
-export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, footer }) => {
+export const Modal: React.FC<ModalProps> = ({
+  visible,
+  onClose,
+  title,
+  children,
+  footer,
+  confirmText,
+}) => {
   return (
     <AnimatePresence>
       {visible && (
@@ -565,7 +574,7 @@ export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children,
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="glass-blur glass-blur-xs fixed inset-0 bg-black/40"
           />
 
           {/* Organic blob content panel */}
@@ -597,7 +606,7 @@ export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children,
                 footer
               ) : (
                 <Button type="primary" size="middle" block onClick={onClose}>
-                  好的，收到！
+                  {confirmText ?? ""}
                 </Button>
               )}
             </div>
@@ -718,12 +727,21 @@ export const Divider: React.FC<DividerProps> = ({ type = "line-brown", id, class
 // ----------------------------------------------------------------------------
 interface PhoneProps {
   title: string;
+  versionLabel: string;
+  networkLabel: string;
   children: React.ReactNode;
   id?: string;
   className?: string;
 }
 
-export const Phone: React.FC<PhoneProps> = ({ title, children, id, className = "" }) => {
+export const Phone: React.FC<PhoneProps> = ({
+  title,
+  versionLabel,
+  networkLabel,
+  children,
+  id,
+  className = "",
+}) => {
   return (
     <div
       id={id}
@@ -742,10 +760,10 @@ export const Phone: React.FC<PhoneProps> = ({ title, children, id, className = "
       <div className="flex items-center justify-between pt-[10px] pb-[6px] px-[12px] text-[#725d42]/70 font-bold text-[11px] tracking-[1px] shrink-0">
         <div className="flex items-center gap-[4px]">{/* Screen notch gap space */}
           <span className="w-[8px] h-[8px] bg-[#82d5bb] rounded-full" />
-          <span>NookPhone v3.5</span>
+          <span>{versionLabel}</span>
         </div>
         <div className="flex items-center gap-[4px]">
-          <span>LTE</span>
+          <span>{networkLabel}</span>
           <span className="w-[12px] h-[8px] border-1.5 border-[#725d42]/60 rounded-[2px] inline-flex items-center">
             <span className="h-full w-2/3 bg-[#725d42]/80" />
           </span>
@@ -753,7 +771,7 @@ export const Phone: React.FC<PhoneProps> = ({ title, children, id, className = "
       </div>
 
       {/* Main interactive viewport */}
-      <div className="bg-white/45 backdrop-blur-[4px] border-2 border-[#edeae0] p-[8px] sm:p-[16px] rounded-[42px] flex-1 min-h-0 relative z-[2] flex flex-col">
+      <div className="glass-blur glass-blur-sm bg-white/45 border-2 border-[#edeae0] p-[8px] sm:p-[16px] rounded-[42px] flex-1 min-h-0 relative z-[2] flex flex-col">
         <div className="text-center shrink-0">
           <span className="bg-[#19c8b9]/15 text-[#19c8b9] font-black text-[11px] uppercase tracking-wider py-[4px] px-[12px] rounded-full">
             {title}

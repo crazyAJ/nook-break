@@ -272,11 +272,7 @@ function rebuildForNewWorkday(
   now: number,
   workdayKey: string,
 ): TimerMachineSnapshot {
-  if (
-    snapshot.mode === 'after_work' &&
-    snapshot.celebratedWorkdayKey !== null &&
-    snapshot.celebratedWorkdayKey !== workdayKey
-  ) {
+  if (!snapshotBelongsToWorkday(snapshot, workdayKey)) {
     return createInitialTimerMachineSnapshot(config, now, workdayKey);
   }
 
@@ -358,6 +354,25 @@ function preserveCelebrationFlag(
   }
 
   return nextSnapshot;
+}
+
+function snapshotBelongsToWorkday(
+  snapshot: TimerMachineSnapshot,
+  workdayKey: string,
+) {
+  if (snapshot.celebratedWorkdayKey === workdayKey) {
+    return true;
+  }
+
+  return resolveDateKey(snapshot.enteredAt) === workdayKey;
+}
+
+function resolveDateKey(timestamp: number) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function resolveWorkdayTime(workdayKey: string, time: string) {

@@ -14,7 +14,6 @@ interface CountdownCardProps {
   onSubmitClockOut?: () => void;
   helperSubtext: string;
   t: LocaleData;
-  lang: "zh" | "en" | "ja" | "ko" | "tc";
   className?: string;
 }
 
@@ -27,36 +26,21 @@ export const CountdownCard: React.FC<CountdownCardProps> = ({
   onSubmitClockOut,
   helperSubtext,
   t,
-  lang,
   className = "",
 }) => {
   const getDisplayTimer = () => {
     switch (activeUnit) {
       case "hours":
-        return `${timerCalc.hoursExact} ${lang === "zh" ? "小时" : lang === "tc" ? "小時" : lang === "ja" ? "時間" : lang === "ko" ? "시간" : "hrs"}`;
+        return `${timerCalc.hoursExact} ${t.hourDisplayUnit}`;
       case "minutes":
-        return `${timerCalc.minutesExact} ${lang === "zh" ? "分钟" : lang === "tc" ? "分鐘" : lang === "ja" ? "分" : lang === "ko" ? "분" : "mins"}`;
+        return `${timerCalc.minutesExact} ${t.minuteDisplayUnit}`;
       case "seconds":
-        return `${timerCalc.secondsExact} ${(lang === "zh" || lang === "tc") ? "秒" : lang === "ja" ? "秒" : lang === "ko" ? "초" : "secs"}`;
+        return `${timerCalc.secondsExact} ${t.secondDisplayUnit}`;
       case "percentage":
         return `${timerCalc.progressPercentage} %`;
       case "combination":
       default:
         return timerCalc.formattedCombination;
-    }
-  };
-
-  const getSwitchLabel = () => {
-    switch (lang) {
-      case "ja":
-        return "🏷️ 表示単位の切り替え：";
-      case "ko":
-        return "🏷️ 표시 단위 전환：";
-      case "en":
-        return "🏷️ Switch display units:";
-      case "zh":
-      default:
-        return "🏷️ 切换显示单位：";
     }
   };
 
@@ -125,15 +109,7 @@ export const CountdownCard: React.FC<CountdownCardProps> = ({
             className="w-full py-2.5 sm:py-3 px-3 bg-gradient-to-r from-[#fc736d] to-[#ff94a2] hover:from-[#fd5f58] hover:to-[#ff8191] text-white rounded-[16px] border-b-4 border-[#b73731] font-black text-[11px] sm:text-[12px] tracking-wide active:translate-y-1 active:border-b-0 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
           >
             <span>🎉</span>
-            {lang === "zh"
-              ? "提交今日成果，敲响快乐下班钟！"
-              : lang === "tc"
-              ? "提交今日成果，敲響快樂下班鐘！"
-              : lang === "ja"
-              ? "仕事の提出＆終業チャイムを鳴らす！"
-              : lang === "ko"
-              ? "오늘의 성과물 제출하고 퇴근벨 치기!"
-              : "Submit work & ring the clock-out chime!"}
+            {t.submitClockOutBtn}
           </button>
         </div>
       )}
@@ -148,7 +124,7 @@ export const CountdownCard: React.FC<CountdownCardProps> = ({
 
       <div data-layout="unit-switcher" className="flex flex-col gap-[4px] sm:gap-[5px]">
         <span className="text-[9px] sm:text-[10px] font-black text-[#7a3542] tracking-wide leading-[1.2] uppercase">
-          {getSwitchLabel()}
+          {t.displayUnitsLabel}
         </span>
         <div data-layout="unit-switcher-buttons" className="flex flex-wrap gap-[4px] sm:gap-[5px]">
           {[
